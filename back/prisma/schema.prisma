@@ -1,0 +1,42 @@
+// Prisma schema for League of Legends Birthday Invitation & RSVP
+// Supports Neon Serverless PostgreSQL & connection pooling
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Guest {
+  id              String         @id @default(cuid())
+  email           String         @unique
+  name            String
+  avatar          String?
+  rsvpStatus      String         @default("ATTENDING") // ATTENDING, TENTATIVE, DECLINED
+  dietaryNotes    String?        // Bebida preferida (Mana Potion / Health Potion) o menú
+  message         String?        // Dedicatoria al cumpleañero
+  championId      String?        @unique // ÚNICO: cada invitado reserva un campeón exclusivo
+  championName    String?
+  championTitle   String?
+  championRole    String?        // Assassin, Fighter, Mage, Marksman, Support, Tank
+  championImage   String?        // URL de la imagen de splash / avatar
+  scores          MinigameScore[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model MinigameScore {
+  id          String   @id @default(cuid())
+  guestId     String
+  guest       Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  score       Int
+  championId  String
+  baronStolen Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([score(sort: Desc)])
+}

@@ -1,0 +1,15 @@
+{
+  "name": "feliz-cumple-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel --filter feliz-cumple-back --filter feliz-cumple-front dev",
+    "dev:back": "pnpm --filter feliz-cumple-back dev",
+    "dev:front": "pnpm --filter feliz-cumple-front dev",
+    "build:back": "pnpm --filter feliz-cumple-back build",
+    "build:front": "pnpm --filter feliz-cumple-front build",
+    "build": "pnpm --filter feliz-cumple-back build && pnpm --filter feliz-cumple-front build",
+    "prisma:generate": "pnpm --filter feliz-cumple-back prisma:generate",
+    "prisma:push": "pnpm --filter feliz-cumple-back prisma:push"
+  }
+}
