@@ -19,14 +19,14 @@ interface GuestRecord {
   updatedAt: string | Date;
 }
 
-const inMemoryGuests: GuestRecord[] = [];
+export const inMemoryGuests: GuestRecord[] = [];
 
 export async function getGuests(req: Request, res: Response) {
   try {
     if (isPrismaConfigured()) {
       try {
-        const guests = await prisma.guest.findMany({
-          orderBy: { createdAt: "desc" },
+        const rawGuests = await prisma.guest.findMany({
+          orderBy: { updatedAt: "desc" },
           include: {
             scores: {
               orderBy: { score: "desc" },
@@ -34,12 +34,34 @@ export async function getGuests(req: Request, res: Response) {
             },
           },
         });
+
+        // Deduplicar rigurosamente por email para que cada invocador tenga únicamente su campeón más reciente
+        const seenEmails = new Set<string>();
+        const guests = rawGuests.filter((g) => {
+          const norm = (g.email || "").trim().toLowerCase();
+          if (!norm) return true;
+          if (seenEmails.has(norm)) return false;
+          seenEmails.add(norm);
+          return true;
+        });
+
         return res.json({ guests, source: "database" });
       } catch (dbErr) {
         console.warn("Base de datos no disponible, usando memoria temporal:", dbErr);
       }
     }
-    return res.json({ guests: inMemoryGuests, source: "memory" });
+
+    // Fallback a memoria
+    const seenEmails = new Set<string>();
+    const guests = [...inMemoryGuests].reverse().filter((g) => {
+      const norm = (g.email || "").trim().toLowerCase();
+      if (!norm) return true;
+      if (seenEmails.has(norm)) return false;
+      seenEmails.add(norm);
+      return true;
+    });
+
+    return res.json({ guests, source: "memory" });
   } catch (err) {
     console.error("Error in getGuests:", err);
     return res.status(500).json({ error: "Error al obtener invitados" });
@@ -66,6 +88,9 @@ export async function submitRsvp(req: Request, res: Response) {
       return res.status(400).json({ error: "El email y el nombre son requeridos" });
     }
 
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanName = String(name).trim();
+
     // Regla crucial: Si seleccionó un campeón, verificar que sea ÚNICO por persona
     if (championId) {
       if (isPrismaConfigured()) {
@@ -73,7 +98,7 @@ export async function submitRsvp(req: Request, res: Response) {
           const existingLock = await prisma.guest.findFirst({
             where: {
               championId: championId,
-              email: { not: email },
+              email: { not: cleanEmail, mode: "insensitive" },
             },
           });
 
@@ -88,7 +113,7 @@ export async function submitRsvp(req: Request, res: Response) {
         }
       } else {
         const memLock = inMemoryGuests.find(
-          (g) => g.championId === championId && g.email !== email
+          (g) => g.championId === championId && g.email.toLowerCase() !== cleanEmail
         );
         if (memLock) {
           return res.status(409).json({
@@ -102,45 +127,57 @@ export async function submitRsvp(req: Request, res: Response) {
     let guest;
     if (isPrismaConfigured()) {
       try {
-        guest = await prisma.guest.upsert({
-          where: { email },
-          update: {
-            name,
-            avatar: avatar || undefined,
-            rsvpStatus,
-            dietaryNotes: dietaryNotes || null,
-            message: message || null,
-            championId: championId || null,
-            championName: championName || null,
-            championTitle: championTitle || null,
-            championRole: championRole || null,
-            championImage: championImage || null,
-          },
-          create: {
-            email,
-            name,
-            avatar: avatar || null,
-            rsvpStatus,
-            dietaryNotes: dietaryNotes || null,
-            message: message || null,
-            championId: championId || null,
-            championName: championName || null,
-            championTitle: championTitle || null,
-            championRole: championRole || null,
-            championImage: championImage || null,
-          },
+        const existingGuest = await prisma.guest.findFirst({
+          where: { email: { equals: cleanEmail, mode: "insensitive" } },
         });
+
+        if (existingGuest) {
+          guest = await prisma.guest.update({
+            where: { id: existingGuest.id },
+            data: {
+              email: cleanEmail,
+              name: cleanName,
+              avatar: avatar || undefined,
+              rsvpStatus,
+              dietaryNotes: dietaryNotes || null,
+              message: message || null,
+              championId: championId || null,
+              championName: championName || null,
+              championTitle: championTitle || null,
+              championRole: championRole || null,
+              championImage: championImage || null,
+            },
+          });
+        } else {
+          guest = await prisma.guest.create({
+            data: {
+              email: cleanEmail,
+              name: cleanName,
+              avatar: avatar || null,
+              rsvpStatus,
+              dietaryNotes: dietaryNotes || null,
+              message: message || null,
+              championId: championId || null,
+              championName: championName || null,
+              championTitle: championTitle || null,
+              championRole: championRole || null,
+              championImage: championImage || null,
+            },
+          });
+        }
       } catch (upsertErr) {
         console.warn("DB Upsert falló, guardando en memoria:", upsertErr);
       }
     }
 
     if (!guest) {
-      const existingIdx = inMemoryGuests.findIndex((g) => g.email === email);
+      const existingIdx = inMemoryGuests.findIndex(
+        (g) => g.email.toLowerCase() === cleanEmail
+      );
       const guestData: GuestRecord = {
         id: `guest-${Date.now()}`,
-        email,
-        name,
+        email: cleanEmail,
+        name: cleanName,
         avatar: avatar || null,
         rsvpStatus,
         dietaryNotes: dietaryNotes || null,

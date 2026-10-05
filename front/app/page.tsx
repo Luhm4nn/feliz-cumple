@@ -56,7 +56,8 @@ export default function Home() {
   // Si el usuario acaba de iniciar sesión, verificar si ya tenía un campeón guardado en la BD
   useEffect(() => {
     if (user?.email && guests.length > 0) {
-      const foundInDb = guests.find((g) => g.email === user.email);
+      const userNorm = user.email.trim().toLowerCase();
+      const foundInDb = guests.find((g) => (g.email || "").trim().toLowerCase() === userNorm);
       if (foundInDb?.championId && foundInDb.championId !== user.championId) {
         updateGuestData({
           championId: foundInDb.championId,
@@ -76,11 +77,15 @@ export default function Home() {
   const handleLockIn = async (champion: ChampionSummary) => {
     if (!user) return;
 
+    // Si ya tenía un estado explícito de asistencia, preservarlo; si no, confirmar como ATTENDING al bloquear
+    const targetRsvpStatus =
+      user.rsvpStatus && user.rsvpStatus !== "PENDING" ? user.rsvpStatus : "ATTENDING";
+
     await submitRsvp({
-      email: user.email,
-      name: user.name,
+      email: user.email.trim().toLowerCase(),
+      name: user.name.trim(),
       avatar: user.avatar,
-      rsvpStatus: user.rsvpStatus || "PENDING",
+      rsvpStatus: targetRsvpStatus,
       dietaryNotes: user.dietaryNotes || null,
       message: user.message || null,
       championId: champion.id,
@@ -96,6 +101,7 @@ export default function Home() {
       championTitle: champion.title,
       championRole: champion.roleEs,
       championImage: champion.iconUrl,
+      rsvpStatus: targetRsvpStatus,
     });
 
     setIsChangingChampion(false);

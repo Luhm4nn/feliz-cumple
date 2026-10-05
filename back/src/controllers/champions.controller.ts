@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { getAllChampions, getChampionDetails } from "../services/riot";
 import { prisma, isPrismaConfigured } from "../services/prisma";
+import { inMemoryGuests } from "./rsvp.controller";
 
 export async function getChampions(req: Request, res: Response) {
   try {
@@ -16,10 +17,19 @@ export async function getChampions(req: Request, res: Response) {
           select: {
             championId: true,
             name: true,
+            email: true,
+            updatedAt: true,
           },
+          orderBy: { updatedAt: "desc" },
         });
 
+        const seenEmails = new Set<string>();
         guestsWithChampions.forEach((g) => {
+          const normEmail = (g.email || "").trim().toLowerCase();
+          if (normEmail) {
+            if (seenEmails.has(normEmail)) return; // Ignorar registros anteriores de la misma persona
+            seenEmails.add(normEmail);
+          }
           if (g.championId) {
             lockedMap[g.championId] = g.name;
           }
@@ -27,6 +37,21 @@ export async function getChampions(req: Request, res: Response) {
       } catch (dbError) {
         console.warn("Base de datos no disponible aún para verificar bloqueo:", dbError);
       }
+    }
+
+    // Fallback con memoria temporal si la BD no arrojó bloqueos
+    if (Object.keys(lockedMap).length === 0 && inMemoryGuests.length > 0) {
+      const seenEmails = new Set<string>();
+      [...inMemoryGuests].reverse().forEach((g) => {
+        const normEmail = (g.email || "").trim().toLowerCase();
+        if (normEmail) {
+          if (seenEmails.has(normEmail)) return;
+          seenEmails.add(normEmail);
+        }
+        if (g.championId) {
+          lockedMap[g.championId] = g.name;
+        }
+      });
     }
 
     const result = champions.map((c) => ({

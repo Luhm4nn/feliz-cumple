@@ -153,20 +153,41 @@ export default function LobbyList({ guests, onRefresh }: LobbyListProps) {
     setIsRefreshing(false);
   };
 
-  const attendingGuests = useMemo(() => guests.filter((g) => g.rsvpStatus === "ATTENDING"), [guests]);
-  const tentativeGuests = useMemo(() => guests.filter((g) => g.rsvpStatus === "TENTATIVE"), [guests]);
-  const declinedGuests = useMemo(() => guests.filter((g) => g.rsvpStatus === "DECLINED"), [guests]);
-  const lockedChampionsCount = useMemo(() => guests.filter((g) => g.championId).length, [guests]);
+  // Deduplicar rigurosamente los invitados por email (o ID) para que cada invocador tenga únicamente su campeón más reciente
+  const uniqueGuests = useMemo(() => {
+    const map = new Map<string, GuestItem>();
+    for (const g of guests) {
+      const key = (g.email ? g.email.trim().toLowerCase() : g.id);
+      if (key && !map.has(key)) {
+        map.set(key, g);
+      }
+    }
+    return Array.from(map.values());
+  }, [guests]);
+
+  const attendingGuests = useMemo(() => uniqueGuests.filter((g) => g.rsvpStatus === "ATTENDING"), [uniqueGuests]);
+  const tentativeGuests = useMemo(() => uniqueGuests.filter((g) => g.rsvpStatus === "TENTATIVE"), [uniqueGuests]);
+  const declinedGuests = useMemo(() => uniqueGuests.filter((g) => g.rsvpStatus === "DECLINED"), [uniqueGuests]);
+  const lockedChampionsCount = useMemo(() => uniqueGuests.filter((g) => g.championId).length, [uniqueGuests]);
 
   const filteredGuests = useMemo(() => {
-    return guests.filter((g) => {
+    return uniqueGuests.filter((g) => {
       const matchStatus =
         statusFilter === "ALL" || g.rsvpStatus === statusFilter;
       const matchRole =
         roleFilter === "ALL" || (g.championRole && g.championRole.toLowerCase().includes(roleFilter.toLowerCase()));
       return matchStatus && matchRole;
     });
-  }, [guests, statusFilter, roleFilter]);
+  }, [uniqueGuests, statusFilter, roleFilter]);
+
+  // Firma única de la alineación para forzar la sincronización exacta del escenario 3D
+  const squadSignature = useMemo(() => {
+    return filteredGuests
+      .filter((g) => Boolean(g.championName))
+      .map((g) => `${(g.email || g.id).toLowerCase()}_${g.championName}_${g.rsvpStatus}`)
+      .sort()
+      .join("|");
+  }, [filteredGuests]);
 
   return (
     <section id="invocadores" className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
@@ -330,8 +351,8 @@ export default function LobbyList({ guests, onRefresh }: LobbyListProps) {
         </div>
       ) : viewMode === "3D" ? (
         <div className="space-y-8">
-          {/* Escena 3D Unificada con todos los campeones juntos */}
-          <Squad3DStage guests={filteredGuests} />
+          {/* Escena 3D Unificada con todos los campeones juntos (sincronizada reactivamente con squadSignature) */}
+          <Squad3DStage key={squadSignature} guests={filteredGuests} />
 
           {/* Ficha Resumen del Escuadrón & Bebidas */}
           <div className="hextech-card rounded-2xl p-5 sm:p-6 border border-lol-gold/30 bg-lol-navy-black/80">

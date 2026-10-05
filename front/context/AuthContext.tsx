@@ -129,7 +129,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user?.email) return;
     try {
       const guests = await getGuests();
-      const found = guests.find((g) => g.email === user.email);
+      const userNorm = user.email.trim().toLowerCase();
+      const found = guests.find((g) => (g.email || "").trim().toLowerCase() === userNorm);
       if (found) {
         updateGuestData(found);
       }

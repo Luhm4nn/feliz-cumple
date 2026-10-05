@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
@@ -43,14 +43,24 @@ export function getRsvpVisual(status?: string | null) {
       isDeclined: false,
     };
   }
-  // DECLINED
+  if (status === "DECLINED") {
+    return {
+      hexColor: "#ef4444", // Rojo Carmesí
+      threeColor: 0xef4444,
+      badgeText: "💀 No va",
+      badgeClass: "bg-red-950/90 text-red-300 border-red-500",
+      lightColor: 0xf87171,
+      isDeclined: true,
+    };
+  }
+  // PENDING / Selección inicial
   return {
-    hexColor: "#ef4444", // Rojo Carmesí
-    threeColor: 0xef4444,
-    badgeText: "💀 No va",
-    badgeClass: "bg-red-950/90 text-red-300 border-red-500",
-    lightColor: 0xf87171,
-    isDeclined: true,
+    hexColor: "#0ac8b9", // Cyan Hextech
+    threeColor: 0x0ac8b9,
+    badgeText: "⚡ Bloqueado",
+    badgeClass: "bg-cyan-950/90 text-cyan-300 border-cyan-500",
+    lightColor: 0x0ac8b9,
+    isDeclined: false,
   };
 }
 
@@ -74,12 +84,30 @@ export default function Squad3DStage({ guests }: Squad3DStageProps) {
     }>
   >([]);
 
-  // Solo aparecen en la escena quienes tengan campeón Y hayan seleccionado una opción explícita de asistencia
-  const guestsWithChampions = guests.filter(
-    (g) =>
-      Boolean(g.championName) &&
-      (g.rsvpStatus === "ATTENDING" || g.rsvpStatus === "TENTATIVE" || g.rsvpStatus === "DECLINED")
-  );
+  // Solo aparecen en la escena quienes tengan un campeón bloqueado.
+  // Deduplicamos rigurosamente por email (o id) para asegurar que NUNCA aparezcan modelos viejos de la misma persona.
+  const guestsWithChampions: GuestItem[] = useMemo(() => {
+    const seenUsers = new Set<string>();
+    const result: GuestItem[] = [];
+
+    for (const g of guests) {
+      if (!g.championName) continue;
+      const userKey = (g.email ? g.email.trim().toLowerCase() : g.id);
+      if (!userKey || seenUsers.has(userKey)) continue;
+      seenUsers.add(userKey);
+      result.push(g);
+    }
+
+    return result;
+  }, [guests]);
+
+  // Firma compuesta única de la alineación activa actual: si alguien cambia de campeón o estado, la escena se actualiza de inmediato
+  const stageSignature = useMemo(() => {
+    return guestsWithChampions
+      .map((g: GuestItem) => `${(g.email || g.id).toLowerCase()}:${g.championName}:${g.rsvpStatus}`)
+      .sort()
+      .join("|");
+  }, [guestsWithChampions]);
 
   const handleSelectChampion = useCallback((guest: GuestItem) => {
     setSelectedGuest(guest);
@@ -203,7 +231,7 @@ export default function Squad3DStage({ guests }: Squad3DStageProps) {
     const mixers: THREE.AnimationMixer[] = [];
 
     // Load each champion in parallel
-    guestsWithChampions.forEach((guest, index) => {
+    guestsWithChampions.forEach((guest: GuestItem, index: number) => {
       const modelUrl = getChampionModelUrl(guest.championName);
       if (!modelUrl) return;
 
@@ -449,7 +477,7 @@ export default function Squad3DStage({ guests }: Squad3DStageProps) {
       ktx2Loader.dispose();
       scene.clear();
     };
-  }, [guestsWithChampions.length, handleSelectChampion]);
+  }, [stageSignature, handleSelectChampion]);
 
   const selectedKit = getChampionKit(selectedGuest?.championName, selectedGuest?.championRole);
 
