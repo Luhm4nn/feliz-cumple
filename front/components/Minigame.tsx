@@ -118,7 +118,7 @@ export function getWaveConfig(wave: number) {
     maxHp,
     attackInterval,
     bulletSpeed,
-    smiteThreshold: 1000,
+    smiteThreshold: 1200,
   };
 }
 
@@ -169,6 +169,11 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
   const [shieldActive, setShieldActive] = useState<boolean>(false);
   const [shieldCd, setShieldCd] = useState<number>(0); // 0-100%
   const [spellCd, setSpellCd] = useState<number>(0); // 0-100%
+  const [attackCd, setAttackCd] = useState<boolean>(false); // Cooldown de 0.25s para ataque básico [Q]
+
+  // Temporizador de reacción de Smite (0.5s)
+  const [smiteTimeRemaining, setSmiteTimeRemaining] = useState<number | null>(null);
+  const [smiteTimePct, setSmiteTimePct] = useState<number>(100);
 
   // Notificaciones flotantes en el viewport
   const [bannerNotice, setBannerNotice] = useState<{ text: string; color: string } | null>(null);
@@ -202,8 +207,11 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
     targetPlayerX: number;
     keys: Record<string, boolean>;
     lastBossAttack: number;
+    lastPlayerAttack: number;
     attackCounter: number;
     isSmiteExecuting: boolean;
+    smiteWindowStartedAt: number | null;
+    hasSmitedThisRound: boolean;
     wave: number;
     bossMaxHp: number;
     currentBossHp: number;
@@ -239,8 +247,11 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
     targetPlayerX: 0,
     keys: {},
     lastBossAttack: 0,
+    lastPlayerAttack: 0,
     attackCounter: 0,
     isSmiteExecuting: false,
+    smiteWindowStartedAt: null,
+    hasSmitedThisRound: false,
     wave: 1,
     bossMaxHp: currentWaveCfg.maxHp,
     currentBossHp: currentWaveCfg.maxHp,
@@ -379,6 +390,12 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
     g.projectiles = [];
     g.zoneStrikes.forEach((z) => g.scene?.remove(z.mesh));
     g.zoneStrikes = [];
+
+    // Resetear ventana y estado de Smite para el nuevo boss
+    g.hasSmitedThisRound = false;
+    g.smiteWindowStartedAt = null;
+    setSmiteTimeRemaining(null);
+    setSmiteTimePct(100);
 
     // Puntos de bonificación por asegurar objetivo (escala de 50 pts)
     const roundBonus = 50 + g.currentCombo * 2;
@@ -867,14 +884,29 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
           }
         }
 
-        // Tensión de Smite: El jefe pierde un poco de vida progresivamente si cae bajo 1800
-        if (g.currentBossHp < 1800 && g.currentBossHp > 0) {
-          g.currentBossHp = Math.max(0, g.currentBossHp - 3);
-          setBossHp(g.currentBossHp);
+        // Ventana crítica de Smite: Umbral de 1200 HP con temporizador estricto de 0.5s (500ms)
+        if (g.currentBossHp <= activeCfg.smiteThreshold && g.currentBossHp > 0) {
+          if (g.smiteWindowStartedAt === null) {
+            g.smiteWindowStartedAt = now;
+            sounds.playHover();
+            showBanner("⚡ ¡ZONA DE SMITE (1,200 HP)! ¡TIENES 0.5s PARA SMITEAR [F]! ⚡", "#f59e0b");
+          } else {
+            const elapsed = now - g.smiteWindowStartedAt;
+            const remainingSec = Math.max(0, (500 - elapsed) / 1000);
+            const remainingPct = Math.max(0, (1 - elapsed / 500) * 100);
+            setSmiteTimeRemaining(remainingSec);
+            setSmiteTimePct(remainingPct);
 
-          // Si el Boss llega a 0 sin Smite -> Te robaron el objetivo
-          if (g.currentBossHp <= 0) {
-            handleGameOver("¡No llegaste a Smitear con [F]! El jungla enemigo te robó el objetivo.");
+            if (elapsed > 500 && !g.hasSmitedThisRound) {
+              handleGameOver("¡Reacción muy lenta! Tardaste más de 0.5s en Smitear y el jungla enemigo te robó el objetivo.");
+              return;
+            }
+          }
+        } else {
+          if (g.smiteWindowStartedAt !== null) {
+            g.smiteWindowStartedAt = null;
+            setSmiteTimeRemaining(null);
+            setSmiteTimePct(100);
           }
         }
 
@@ -953,6 +985,12 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
               setBossHp(g.currentBossHp);
               setScore(g.currentScore);
 
+              // REGLA: Si matas al objetivo antes de Smitear -> PERDES (debes matarlo con Smite sí o sí)
+              if (g.currentBossHp <= 0 && !g.hasSmitedThisRound) {
+                handleGameOver("¡Mataste al objetivo a golpes antes de Smitear! Debes rematarlo obligatoriamente con tu Smite [F].");
+                return;
+              }
+
               // Sacudida visual al Boss
               if (bossGroup) {
                 bossGroup.position.z = -3.2 - 0.15;
@@ -967,7 +1005,9 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
               // Si cae en zona de Smite por primera vez
               if (g.currentBossHp <= activeCfg.smiteThreshold && g.currentBossHp > 0) {
                 smiteRingMat.opacity = 0.95;
-                showBanner("¡ZONA DE SMITE! ¡PRESIONA [F] AHORA!", "#f59e0b");
+                if (g.smiteWindowStartedAt === null) {
+                  g.smiteWindowStartedAt = now;
+                }
               }
             } else if (p.mesh.position.z < -6 || Math.abs(p.mesh.position.x) > 8) {
               p.alive = false;
@@ -1042,8 +1082,9 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
         handleStartFight();
       }
 
-      // Ataque de Campeón: Q
+      // Ataque de Campeón: Q (Cooldown 0.25s y sin repetición por mantener presionado)
       if (e.code === "KeyQ" && g.isPlaying) {
+        if (e.repeat) return; // Evita spam automático del teclado al mantener apretada la tecla
         handlePlayerAttack();
       }
 
@@ -1130,6 +1171,11 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
     g.zoneStrikes.forEach((z) => g.scene?.remove(z.mesh));
     g.zoneStrikes = [];
 
+    g.hasSmitedThisRound = false;
+    g.smiteWindowStartedAt = null;
+    setSmiteTimeRemaining(null);
+    setSmiteTimePct(100);
+
     setBossHp(initialCfg.maxHp);
     setPlayerHp(100);
     setScore(0);
@@ -1146,10 +1192,15 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
     }
   };
 
-  // Disparo básico de habilidad de campeón (Q o Clic)
+  // Disparo básico de habilidad de campeón (Q o Clic) con cooldown estricto de 0.25s (250ms)
   const handlePlayerAttack = useCallback(() => {
     const g = gameRef.current;
-    if (!g.isPlaying || !g.scene) return;
+    const now = performance.now();
+    if (!g.isPlaying || !g.scene || now - g.lastPlayerAttack < 250) return;
+    g.lastPlayerAttack = now;
+
+    setAttackCd(true);
+    setTimeout(() => setAttackCd(false), 250);
 
     sounds.playClick();
 
@@ -1239,7 +1290,11 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
     const g = gameRef.current;
     if (!g.isPlaying) return;
 
-    // 1. Rayo de Smite 3D
+    // REGLA 1: El Smite es único por boss
+    if (g.hasSmitedThisRound) return;
+    g.hasSmitedThisRound = true;
+
+    // Efecto visual del rayo de Smite 3D
     sounds.playSmite();
     g.isSmiteExecuting = true;
     if (g.smitePillar) {
@@ -1247,27 +1302,28 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
     }
 
     const currentCfg = getWaveConfig(g.wave);
+    const now = performance.now();
 
-    // 2. Comprobar ventana de Smite (<= 1000 HP)
-    if (g.currentBossHp <= currentCfg.smiteThreshold && g.currentBossHp > 0) {
-      // ¡SMITE PERFECTO! Objetivo asegurado -> Spawnea el siguiente boss infinitamente
-      advanceToNextWave();
-    } else {
-      // Smite prematuro
-      const dmg = 800;
-      g.currentBossHp = Math.max(0, g.currentBossHp - dmg);
-      setBossHp(g.currentBossHp);
-      addDamagePopup(`SMITE PREMATURO -${dmg}`, "#ef4444", 400, 200);
-
-      if (g.currentBossHp > 0) {
-        setTimeout(() => {
-          if (g.isPlaying) {
-            handleGameOver("¡Smiteaste antes de tiempo con [F]! El jungla rival aseguró el objetivo con 200 HP.");
-          }
-        }, 1200);
-      }
+    // REGLA 2: Si smiteas temprano (> 1,200 HP) -> PERDES DE INMEDIATO
+    if (g.currentBossHp > currentCfg.smiteThreshold) {
+      handleGameOver(
+        `¡Smiteaste antes de tiempo! Gastaste tu único Smite cuando el jefe tenía ${g.currentBossHp.toLocaleString()} HP (límite: 1,200 HP) y el jungla enemigo te robó el objetivo.`
+      );
+      return;
     }
-  }, [advanceToNextWave, handleGameOver, addDamagePopup]);
+
+    // REGLA 3: Si tardaste más de 0.5s (500ms) en la ventana -> TE LO ROBARON Y PERDES
+    const elapsed = g.smiteWindowStartedAt ? now - g.smiteWindowStartedAt : 0;
+    if (elapsed > 500) {
+      handleGameOver("¡Reacción muy lenta! Tardaste más de 0.5s en presionar Smite y el jungla rival se adelantó.");
+      return;
+    }
+
+    // REGLA 4: ¡SMITE PERFECTO! Rematado dentro del tiempo de reacción con Smite
+    g.currentBossHp = 0;
+    setBossHp(0);
+    advanceToNextWave();
+  }, [advanceToNextWave, handleGameOver]);
 
   const bossHpPct = Math.max(0, Math.min(100, (bossHp / currentWaveCfg.maxHp) * 100));
   const inSmiteRange = bossHp <= currentWaveCfg.smiteThreshold && bossHp > 0;
@@ -1287,9 +1343,10 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
           Enfréntate en cadena al <strong className="text-cyan-400">Heraldo</strong>,{" "}
           <strong className="text-amber-400">Dragón Ancestral</strong> y{" "}
           <strong className="text-purple-400">Barón Nashor</strong>. Muévete con{" "}
-          <strong className="text-white font-mono">[A / D]</strong>, esquiva sus ataques especiales y presiona{" "}
-          <strong className="text-lol-gold font-mono">[F - SMITE]</strong> en el milisegundo exacto para avanzar
-          sin fin.
+          <strong className="text-white font-mono">[A / D]</strong>, baja su vida y al alcanzar{" "}
+          <strong className="text-yellow-400 font-bold">1,200 HP</strong> tienes exactamente{" "}
+          <strong className="text-red-400 font-bold">0.5s</strong> para rematar con{" "}
+          <strong className="text-lol-gold font-mono">[F - SMITE]</strong>. ¡Si smiteas temprano o lo matas a golpes, pierdes!
         </p>
 
         {/* Timeline / Indicador de Progreso Boss Rush */}
@@ -1356,22 +1413,22 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
               </span>
             </div>
 
-            {/* Health Bar with Smite Execution Marker */}
+            {/* Health Bar with Smite Execution Marker (1,200 HP) */}
             <div className="relative w-full h-4 bg-gray-900 rounded-full overflow-hidden border border-lol-gold/30 p-0.5">
               <div
                 className={`h-full rounded-full transition-all duration-75 ${
                   inSmiteRange
-                    ? "bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 animate-pulse"
+                    ? "bg-gradient-to-r from-red-500 via-amber-400 to-yellow-300 animate-pulse"
                     : "bg-gradient-to-r from-purple-700 via-fuchsia-600 to-emerald-500"
                 }`}
                 style={{ width: `${bossHpPct}%` }}
               />
 
-              {/* Marcador del Umbral de Smite (1,000 HP) */}
+              {/* Marcador del Umbral de Smite (1,200 HP) */}
               <div
                 className="absolute top-0 bottom-0 w-0.5 bg-yellow-300 z-10 shadow-[0_0_8px_#fde047]"
                 style={{ left: `${(currentWaveCfg.smiteThreshold / currentWaveCfg.maxHp) * 100}%` }}
-                title="Umbral de Smite (1,000 HP)"
+                title={`Umbral de Smite (${currentWaveCfg.smiteThreshold.toLocaleString()} HP)`}
               />
             </div>
 
@@ -1379,12 +1436,32 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
               <span>Siguiente: {nextWaveCfg.name} {nextWaveCfg.icon}</span>
               {inSmiteRange ? (
                 <span className="text-yellow-400 font-bold uppercase tracking-wider animate-bounce">
-                  ⚡ ¡RANGO DE SMITE ACTIVO! PRESIONA [F] AHORA ⚡
+                  ⚡ ¡RANGO DE SMITE ACTIVO! PRESIONA [F] ⚡
                 </span>
               ) : (
-                <span>Umbral de Smite: 1,000 HP</span>
+                <span>Umbral de Smite: {currentWaveCfg.smiteThreshold.toLocaleString()} HP</span>
               )}
             </div>
+
+            {/* Temporizador de Reacción de 0.5s cuando está en rango */}
+            {inSmiteRange && (
+              <div className="mt-2 pt-2 border-t border-yellow-500/30 w-full animate-fadeIn">
+                <div className="flex items-center justify-between text-[11px] font-mono font-black text-yellow-300 mb-1">
+                  <span className="flex items-center gap-1.5 animate-pulse">
+                    ⚡ TIEMPO DE REACCIÓN SMITE [F] (0.5s):
+                  </span>
+                  <span className="text-red-400 font-extrabold text-xs">
+                    {smiteTimeRemaining !== null ? `${smiteTimeRemaining.toFixed(2)}s` : "0.50s"}
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-gray-950 rounded-full overflow-hidden border border-yellow-400 p-0.5 shadow-[0_0_12px_#fde047]">
+                  <div
+                    className="h-full bg-gradient-to-r from-red-600 via-amber-500 to-yellow-300 rounded-full transition-all duration-75"
+                    style={{ width: `${smiteTimePct}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1440,11 +1517,12 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
 
             <p className="text-xs sm:text-sm text-gray-300 max-w-md mb-6 leading-relaxed">
               Jugarás con <strong className="text-lol-gold">{user?.championName || "tu campeón"}</strong>.
-              Usa exclusivamente las teclas <strong className="text-white font-bold">[A / D]</strong> para
-              moverte, dispara ataques con <strong className="text-white">[Q / Clic]</strong>, cúbrete con{" "}
-              <strong className="text-white">[W / Espacio]</strong> y remata con{" "}
-              <strong className="text-lol-gold font-bold">[F - SMITE]</strong>. ¡Cada objetivo derrotado suma puntos y
-              despierta al siguiente monstruo épico! (¡Tu vida no se regenera entre rondas!)
+              Muévete con <strong className="text-white font-bold">[A / D]</strong>, ataca con{" "}
+              <strong className="text-white">[Q / Clic]</strong> y defiéndete con{" "}
+              <strong className="text-white">[W]</strong>. Al caer bajo{" "}
+              <strong className="text-yellow-400 font-bold">1,200 HP</strong> tienes solo{" "}
+              <strong className="text-red-400 font-bold">0.5s</strong> para rematarlo con{" "}
+              <strong className="text-lol-gold font-bold">[F - SMITE]</strong>. (¡Smitear antes de 1,200 HP o matarlo a golpes es derrota!).
             </p>
 
             <button
@@ -1550,13 +1628,18 @@ export default function Minigame({ onScoreSaved, onOpenAuth }: MinigameProps) {
               <kbd className="px-1.5 py-0.5 rounded bg-gray-800 text-lol-gold font-bold">D</kbd>
             </div>
 
-            {/* Q: Ataque de Campeón */}
+            {/* Q: Ataque de Campeón (Cooldown 0.25s) */}
             <button
               onClick={handlePlayerAttack}
-              title="Ataque de Campeón [Q o Clic]"
-              className="px-3 py-2 rounded-lg bg-lol-navy hover:bg-lol-metal border border-lol-gold/40 text-lol-gold-light text-xs font-mono font-bold transition-all shadow flex items-center gap-1.5 hover:scale-105 active:scale-95"
+              disabled={attackCd}
+              title="Ataque de Campeón [Q o Clic] (Cooldown 0.25s)"
+              className={`px-3 py-2 rounded-lg border text-xs font-mono font-bold transition-all shadow flex items-center gap-1.5 ${
+                attackCd
+                  ? "bg-gray-900 border-gray-700 text-gray-500 cursor-not-allowed scale-95"
+                  : "bg-lol-navy hover:bg-lol-metal border-lol-gold/40 text-lol-gold-light hover:scale-105 active:scale-95"
+              }`}
             >
-              <Swords size={14} className="text-lol-gold" />
+              <Swords size={14} className={attackCd ? "text-gray-500" : "text-lol-gold"} />
               <span>[Q] Atacar</span>
             </button>
 
