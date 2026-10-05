@@ -22,12 +22,12 @@ export async function getScores(req: Request, res: Response) {
   try {
     if (isPrismaConfigured()) {
       try {
-        const scores = await prisma.minigameScore.findMany({
-          take: 10,
+        const allScores = await prisma.minigameScore.findMany({
           orderBy: { score: "desc" },
           include: {
             guest: {
               select: {
+                id: true,
                 name: true,
                 avatar: true,
                 championName: true,
@@ -38,8 +38,21 @@ export async function getScores(req: Request, res: Response) {
           },
         });
 
+        // Agrupar para devolver estrictamente el MEJOR puntaje de cada jugador
+        const seenGuests = new Set<string>();
+        const uniqueScores: typeof allScores = [];
+
+        for (const s of allScores) {
+          const guestKey = s.guestId || s.guest.name;
+          if (!seenGuests.has(guestKey)) {
+            seenGuests.add(guestKey);
+            uniqueScores.push(s);
+            if (uniqueScores.length >= 10) break;
+          }
+        }
+
         return res.json({
-          scores: scores.map((s) => ({
+          scores: uniqueScores.map((s) => ({
             id: s.id,
             score: s.score,
             championId: s.championId,
@@ -59,8 +72,20 @@ export async function getScores(req: Request, res: Response) {
       }
     }
 
-    const sorted = [...inMemoryScores].sort((a, b) => b.score - a.score).slice(0, 10);
-    return res.json({ scores: sorted });
+    const sorted = [...inMemoryScores].sort((a, b) => b.score - a.score);
+    const seenMem = new Set<string>();
+    const uniqueMem: InMemScore[] = [];
+
+    for (const s of sorted) {
+      const key = s.player.name || s.id;
+      if (!seenMem.has(key)) {
+        seenMem.add(key);
+        uniqueMem.push(s);
+        if (uniqueMem.length >= 10) break;
+      }
+    }
+
+    return res.json({ scores: uniqueMem });
   } catch (err) {
     console.error("Error in getScores:", err);
     return res.status(500).json({ error: "Error al obtener puntuaciones" });

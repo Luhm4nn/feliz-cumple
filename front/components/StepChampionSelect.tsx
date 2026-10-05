@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import { ChampionSummary } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { sounds } from "@/lib/sounds";
-import { Search, Sparkles, Lock, LogOut } from "lucide-react";
+import { Search, Lock, LogOut, ArrowLeft } from "lucide-react";
 import ChampionDetailModal from "./ChampionDetailModal";
 
 interface StepChampionSelectProps {
@@ -69,24 +69,34 @@ export default function StepChampionSelect({
             sounds.playClick();
             onBackToLogin();
           }}
-          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-lol-red transition-colors"
+          className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-lol-gold transition-all px-3 py-1.5 rounded-lg border border-lol-gold/30 hover:border-lol-gold bg-lol-navy/70 shadow"
         >
-          <LogOut size={14} />
-          <span>Cambiar Invocador</span>
+          {user?.championId ? (
+            <>
+              <ArrowLeft size={14} />
+              <span>Volver al Inicio</span>
+            </>
+          ) : (
+            <>
+              <LogOut size={14} />
+              <span>Cambiar Invocador</span>
+            </>
+          )}
         </button>
       </div>
 
       {/* Main Header */}
       <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lol-blue/15 border border-lol-blue/30 text-lol-blue text-xs font-mono font-bold uppercase tracking-wider mb-2">
-          <Sparkles size={14} />
-          <span>Paso 2 • Bloqueo de Campeón Exclusivo</span>
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-lol-blue/15 border border-lol-blue/30 text-lol-blue text-xs font-mono font-bold uppercase tracking-wider mb-2">
+          <span>{user?.championId ? "Fase de Selección • Cambio de Campeón" : "Paso 2 • Bloqueo de Campeón Exclusivo"}</span>
         </div>
         <h2 className="text-3xl sm:text-5xl font-extrabold font-beaufort gold-gradient-text uppercase">
-          ELIGE A TU CAMPEÓN
+          {user?.championId ? "CAMBIA TU CAMPEÓN" : "ELIGE A TU CAMPEÓN"}
         </h2>
         <p className="text-gray-300 max-w-xl mx-auto text-xs sm:text-sm mt-2">
-          ¡Hola <strong>{user?.name}</strong>! Cada invitado debe reservar un campeón único para la partida del 10/10/2026. Haz clic en tu favorito para ver sus habilidades y bloquearlo.
+          {user?.championId
+            ? `Tu campeón actual es ${user.championName}. Puedes cambiarlo por cualquier otro que no esté bloqueado con candado rojo.`
+            : `¡Hola ${user?.name}! Cada invitado debe reservar un campeón único para la partida del 10/10/2026. Haz clic en tu favorito para ver sus habilidades y bloquearlo.`}
         </p>
 
         {/* Counter Pill */}

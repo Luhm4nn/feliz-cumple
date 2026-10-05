@@ -16,7 +16,7 @@ model Guest {
   email           String         @unique
   name            String
   avatar          String?
-  rsvpStatus      String         @default("ATTENDING") // ATTENDING, TENTATIVE, DECLINED
+  rsvpStatus      String         @default("PENDING") // PENDING, ATTENDING, TENTATIVE, DECLINED
   dietaryNotes    String?        // Bebida preferida (Mana Potion / Health Potion) o menú
   message         String?        // Dedicatoria al cumpleañero
   championId      String?        @unique // ÚNICO: cada invitado reserva un campeón exclusivo

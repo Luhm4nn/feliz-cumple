@@ -2,86 +2,101 @@
 
 import React from "react";
 import { sounds } from "@/lib/sounds";
-import { Calendar, Clock, MapPin, Beer, Shirt, ShieldCheck } from "lucide-react";
+import { Utensils, Clock, Beer, Trophy } from "lucide-react";
 
 export default function EventDetails() {
-  const cards = [
+  const highlights = [
     {
-      icon: <Calendar className="text-lol-gold" size={26} />,
-      title: "Día de la Batalla",
-      detail: "Sábado 10 de Octubre de 2026",
-      subtext: "Guardá la fecha en tu calendario de invocador",
+      icon: <Utensils className="text-amber-400" size={26} />,
+      badge: "BANQUETE DEL BARÓN",
+      title: "Choripanes a la Parrilla",
+      detail: "¡Choris calientes a las brasas de Dragón Infernal!",
+      description:
+        "La comida oficial de la victoria: choripanes épicos para recargar la barra de vida al 100%.",
+      glowColor: "hover:border-amber-400/60 shadow-amber-500/10",
     },
     {
       icon: <Clock className="text-lol-blue" size={26} />,
-      title: "Hora de Partida",
-      detail: "20:30 hs en punto",
-      subtext: "Hasta que caiga el Nexo enemigo (toda la noche)",
+      badge: "HORA DE DESPLIEGUE",
+      title: "Estar a las 8:30 PM (20:30 hs)",
+      detail: "Llegada puntual para armar el lobby de la fiesta",
+      description:
+        "No te quedes AFK en base. Arrancamos a las 20:30 hs para disfrutar la previa, la comida y el minijuego.",
+      glowColor: "hover:border-lol-blue/60 shadow-cyan-500/10",
     },
     {
-      icon: <MapPin className="text-lol-red" size={26} />,
-      title: "Base Principal (Lugar)",
-      detail: "Congreso 533, San Lorenzo",
-      subtext: "San Lorenzo, Santa Fe • Con mapa interactivo abajo",
+      icon: <Beer className="text-emerald-400" size={26} />,
+      badge: "POCIONES LIBRES",
+      title: "Llevar Bebidas quienes quieran",
+      detail: "Health Potions, Mana & Elixires artesanales",
+      description:
+        "Traé tu bebida favorita (birra, fernet, tragos o gaseosas) para mantener tu maná al máximo toda la noche.",
+      glowColor: "hover:border-emerald-400/60 shadow-emerald-500/10",
     },
     {
-      icon: <Beer className="text-amber-400" size={26} />,
-      title: "Pociones & Banquete",
-      detail: "Buffet del Barón & Pociones",
-      subtext: "Health Potions (tragos/birra), Mana Potions (sin alcohol) y comida",
-    },
-    {
-      icon: <Shirt className="text-purple-400" size={26} />,
-      title: "Código de Vestimenta",
-      detail: "Casual / Remera de LoL",
-      subtext: "Cosplays y atuendos temáticos son más que bienvenidos",
-    },
-    {
-      icon: <ShieldCheck className="text-emerald-400" size={26} />,
-      title: "Regla de Oro",
-      detail: "Campeón Único por Invitado",
-      subtext: "Elegí y bloqueá tu campeón antes de que otro lo tome",
+      icon: <Trophy className="text-purple-400" size={26} />,
+      badge: "AFTER-PARTY / FENDY",
+      title: "Torneo en Fendy (A Confirmar)",
+      detail: "Raid nocturno al boliche tras destruir el Nexo",
+      description:
+        "Al terminar en Congreso 533, el escuadrón evalúa ir a tirar pasos y disputar el torneo de baile en Fendy.",
+      glowColor: "hover:border-purple-400/60 shadow-purple-500/10",
     },
   ];
 
   return (
-    <section id="evento" className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-xs sm:text-sm font-mono tracking-[0.25em] text-lol-blue uppercase font-bold mb-2">
-          Detalles de la Convocatoria
+    <section id="evento" className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      {/* Header Info General */}
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-lol-gold/15 border border-lol-gold/30 text-lol-gold text-xs font-mono font-bold uppercase tracking-wider mb-2">
+          <span>Información General de la Partida</span>
+        </div>
+        <h2 className="text-3xl sm:text-4xl font-extrabold font-beaufort gold-gradient-text uppercase">
+          REGLAS, BANQUETE & AFTER
         </h2>
-        <h3 className="text-3xl sm:text-4xl font-extrabold font-beaufort gold-gradient-text">
-          INFORMACIÓN DE LA PARTIDA
-        </h3>
-        <p className="text-gray-400 max-w-xl mx-auto text-sm mt-2">
-          Todos los invocadores confirmados compartirán el banquete, las pociones y la gloria en mi casa.
+        <p className="text-gray-300 max-w-xl mx-auto text-sm mt-2">
+          Todo lo que necesitás saber para la noche del Sábado 10 de Octubre en Congreso 533 (San Lorenzo).
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {cards.map((card, idx) => (
+      {/* 4 Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        {highlights.map((item, idx) => (
           <div
             key={idx}
             onMouseEnter={() => sounds.playHover()}
-            className="hextech-card p-6 rounded-lg border border-lol-gold/30 hover:border-lol-gold transition-all duration-300 transform hover:-translate-y-1 shadow-md"
+            className={`hextech-card p-5 rounded-xl border border-lol-gold/30 transition-all duration-300 transform hover:-translate-y-1.5 shadow-lg flex flex-col justify-between ${item.glowColor}`}
           >
             <div className="hextech-corner hextech-corner-tl" />
             <div className="hextech-corner hextech-corner-tr" />
             <div className="hextech-corner hextech-corner-bl" />
             <div className="hextech-corner hextech-corner-br" />
 
-            <div className="p-3 w-fit rounded-lg bg-lol-navy border border-lol-gold/40 mb-4 shadow-inner">
-              {card.icon}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2.5 rounded-lg bg-lol-navy border border-lol-gold/30 shadow-inner">
+                  {item.icon}
+                </div>
+                <span className="text-[10px] font-mono tracking-wider px-2 py-0.5 rounded bg-black/60 border border-lol-gold/20 text-lol-gold font-bold">
+                  {item.badge}
+                </span>
+              </div>
+
+              <h3 className="text-base sm:text-lg font-bold text-white mb-1 leading-snug">
+                {item.title}
+              </h3>
+              <div className="text-xs text-lol-gold-light font-semibold mb-2">
+                {item.detail}
+              </div>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                {item.description}
+              </p>
             </div>
-            <h4 className="text-xs font-mono uppercase tracking-wider text-lol-gold font-bold mb-1">
-              {card.title}
-            </h4>
-            <div className="text-lg font-bold text-white mb-1">
-              {card.detail}
+
+            <div className="mt-4 pt-3 border-t border-lol-gold/15 flex items-center justify-between text-[11px] font-mono text-gray-500">
+              <span>Sábado 10/10 • 20:30</span>
+              <span className="text-lol-gold">✓ Requerido</span>
             </div>
-            <p className="text-xs text-gray-400">
-              {card.subtext}
-            </p>
           </div>
         ))}
       </div>

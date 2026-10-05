@@ -52,7 +52,7 @@ export async function submitRsvp(req: Request, res: Response) {
       email,
       name,
       avatar,
-      rsvpStatus = "ATTENDING",
+      rsvpStatus = "PENDING",
       dietaryNotes,
       message,
       championId,

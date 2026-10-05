@@ -31,7 +31,7 @@ export interface GuestItem {
   name: string;
   email: string;
   avatar?: string | null;
-  rsvpStatus: "ATTENDING" | "TENTATIVE" | "DECLINED";
+  rsvpStatus: "PENDING" | "ATTENDING" | "TENTATIVE" | "DECLINED";
   dietaryNotes?: string | null;
   message?: string | null;
   championId?: string | null;

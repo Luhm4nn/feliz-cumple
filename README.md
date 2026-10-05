@@ -1,4 +1,4 @@
-# 🎂 Invitación de Cumpleaños en la Grieta del Invocador (League of Legends)
+# ⚔️ Invitación en la Grieta del Invocador (League of Legends)
 
 Aplicación web interactiva de invitación de cumpleaños con temática integral de **League of Legends (Hextech / Summoner's Rift)**, con arquitectura completamente separada en **Frontend (`front/`)** y **Backend (`back/`)**.
 

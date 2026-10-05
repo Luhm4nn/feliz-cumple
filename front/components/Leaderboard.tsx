@@ -17,7 +17,15 @@ export default function Leaderboard({ refreshTrigger = 0 }: LeaderboardProps) {
     try {
       setLoading(true);
       const data = await getScores();
-      setScores(data);
+      // Asegurar que quede únicamente el mejor récord por jugador
+      const seen = new Set<string>();
+      const unique = data.filter((s) => {
+        const key = s.player?.name || s.id;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      setScores(unique);
     } catch (e) {
       console.error("Error loading scores:", e);
     } finally {
@@ -74,7 +82,7 @@ export default function Leaderboard({ refreshTrigger = 0 }: LeaderboardProps) {
               Ranking de la Grieta
             </h3>
             <p className="text-xs text-gray-400">
-              Mejores récords conseguidos en el minijuego de Congreso 533
+              Mejor récord por jugador en el minijuego de Congreso 533
             </p>
           </div>
         </div>

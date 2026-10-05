@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { sounds } from "@/lib/sounds";
-import { Calendar, MapPin, Swords, Sparkles, Trophy } from "lucide-react";
+import { Calendar, MapPin, Swords, Users, Trophy } from "lucide-react";
 
 export default function HeroCountdown() {
   // Fecha del cumpleaños: Sábado 10 de Octubre de 2026 a las 20:30 hs
@@ -48,7 +48,6 @@ export default function HeroCountdown() {
 
       {/* Hextech Badge */}
       <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-lol-navy/80 border border-lol-gold/50 shadow-glow-gold mb-6 animate-pulse-glow">
-        <Sparkles size={16} className="text-lol-gold" />
         <span className="text-xs uppercase font-mono font-bold tracking-[0.2em] text-lol-gold-light">
           Invocación Legendaria • Edición 2026
         </span>
@@ -100,31 +99,32 @@ export default function HeroCountdown() {
       </div>
 
       {/* Quick Action Buttons */}
-      <div className="flex flex-wrap items-center justify-center gap-4 z-10">
+      <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 z-10">
         <a
-          href="#campeones"
+          href="#asistencia"
           onClick={() => sounds.playClick()}
-          className="flex items-center gap-2.5 px-6 py-3.5 rounded bg-gradient-to-r from-lol-gold-dark via-lol-gold to-lol-gold-dark hover:from-lol-gold hover:to-lol-gold-light text-lol-navy-black font-extrabold text-sm uppercase tracking-wider border border-lol-gold shadow-glow-gold transition-all duration-200 transform hover:-translate-y-0.5"
+          className="flex items-center gap-2 px-6 py-3.5 rounded-lg bg-gradient-to-r from-lol-gold-dark via-lol-gold to-lol-gold-dark hover:from-lol-gold hover:to-lol-gold-light text-lol-navy-black font-extrabold text-xs sm:text-sm uppercase tracking-wider border border-lol-gold shadow-glow-gold transition-all duration-200 transform hover:-translate-y-0.5"
         >
-          <Swords size={18} />
-          <span>Elegir mi Campeón (Lock-In)</span>
+          <Swords size={16} />
+          <span>Confirmar Asistencia</span>
+        </a>
+
+        <a
+          href="#invocadores"
+          onClick={() => sounds.playClick()}
+          className="flex items-center gap-2 px-5 py-3.5 rounded-lg bg-lol-navy hover:bg-lol-metal text-lol-gold-light hover:text-white font-bold text-xs sm:text-sm uppercase tracking-wider border border-lol-gold/40 shadow transition-all duration-200 transform hover:-translate-y-0.5"
+        >
+          <Users size={16} className="text-lol-gold" />
+          <span>Ver Escuadrón</span>
         </a>
 
         <a
           href="#minijuego"
           onClick={() => sounds.playClick()}
-          className="flex items-center gap-2.5 px-6 py-3.5 rounded bg-lol-navy hover:bg-lol-metal text-lol-blue hover:text-white font-bold text-sm uppercase tracking-wider border border-lol-blue/50 shadow-glow-blue transition-all duration-200 transform hover:-translate-y-0.5"
+          className="flex items-center gap-2 px-5 py-3.5 rounded-lg bg-lol-navy/80 hover:bg-lol-navy text-lol-blue hover:text-white font-bold text-xs sm:text-sm uppercase tracking-wider border border-lol-blue/50 shadow-glow-blue transition-all duration-200 transform hover:-translate-y-0.5"
         >
-          <Trophy size={18} />
-          <span>Jugar en la Grieta</span>
-        </a>
-
-        <a
-          href="#asistencia"
-          onClick={() => sounds.playClick()}
-          className="flex items-center gap-2 px-5 py-3 rounded bg-transparent hover:bg-white/5 text-gray-300 hover:text-lol-gold text-sm font-semibold border border-gray-700 hover:border-lol-gold/50 transition-all"
-        >
-          <span>Confirmar Asistencia</span>
+          <Trophy size={16} />
+          <span>Minijuego de la Grieta</span>
         </a>
       </div>
     </section>

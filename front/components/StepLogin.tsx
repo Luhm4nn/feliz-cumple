@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { sounds } from "@/lib/sounds";
-import { Sparkles, Swords, User, Calendar, MapPin, ArrowRight } from "lucide-react";
+import { Swords, User, Calendar, MapPin, ArrowRight, Crown } from "lucide-react";
 import { signIn } from "next-auth/react";
 
 interface StepLoginProps {
@@ -68,11 +68,10 @@ export default function StepLogin({ onSuccess }: StepLoginProps) {
         {/* Top Crest */}
         <div className="text-center mb-8">
           <div className="inline-flex p-4 rounded-full bg-lol-navy border-2 border-lol-gold text-lol-gold mb-4 shadow-glow-gold">
-            <span className="text-3xl">🎂</span>
+            <Crown size={32} className="text-lol-gold" />
           </div>
 
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lol-gold/10 border border-lol-gold/30 text-lol-gold font-mono text-[11px] uppercase font-bold tracking-widest mb-3">
-            <Sparkles size={13} />
             <span>Invitación Oficial • Edición 2026</span>
           </div>
 

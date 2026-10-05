@@ -4,8 +4,9 @@ import React, { useState, useEffect } from "react";
 import { ChampionSummary, ChampionDetail, getChampionDetails } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { sounds } from "@/lib/sounds";
-import { X, Lock, CheckCircle, Sparkles, Swords } from "lucide-react";
+import { X, Lock, CheckCircle, Zap, Swords } from "lucide-react";
 import confetti from "canvas-confetti";
+import { getChampionKit } from "@/lib/championSkills";
 
 interface ChampionDetailModalProps {
   champion: (ChampionSummary & { isLocked?: boolean; lockedBy?: string | null }) | null;
@@ -62,6 +63,8 @@ export default function ChampionDetailModal({
       setIsLocking(true);
       await onLockIn(champion);
       sounds.playLockIn();
+      const kit = getChampionKit(champion.name, champion.roleEs);
+      setTimeout(() => sounds.playChampionVoice(champion.name, kit.soundType), 400);
       confetti({
         particleCount: 80,
         spread: 70,
@@ -242,7 +245,7 @@ export default function ChampionDetailModal({
 
           {/* Minigame Trait Notice */}
           <div className="p-4 rounded-lg bg-lol-blue/10 border border-lol-blue/30 flex items-start gap-3 text-xs text-gray-300">
-            <Sparkles size={20} className="text-lol-blue shrink-0 mt-0.5" />
+            <Zap size={20} className="text-lol-blue shrink-0 mt-0.5" />
             <div>
               <span className="font-bold text-lol-blue">Habilidad en el Minijuego: </span>
               Al seleccionar a {champion.name} ({champion.roleEs}), tu campeón tendrá la habilidad activa especial de clase en el minijuego de esquivar skillshots y robar el Barón.

@@ -118,3 +118,118 @@ body {
 .animate-pulse-glow {
   animation: pulse-glow 3s infinite ease-in-out;
 }
+
+/* 3D Perspective & Holographic Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.perspective-1500 {
+  perspective: 1500px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.translate-z-10 {
+  transform: translateZ(10px);
+}
+
+.translate-z-20 {
+  transform: translateZ(20px);
+}
+
+.translate-z-30 {
+  transform: translateZ(30px);
+}
+
+.translate-z-40 {
+  transform: translateZ(40px);
+}
+
+.translate-z-50 {
+  transform: translateZ(50px);
+}
+
+/* 3D Card Hover Holographic Shine */
+.holo-card {
+  transition: transform 0.15s ease-out, box-shadow 0.25s ease-out;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.holo-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(200, 170, 110, 0.25) 0%,
+    rgba(10, 200, 185, 0.15) 35%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  mix-blend-mode: color-dodge;
+  z-index: 20;
+}
+
+.holo-card:hover .holo-shine {
+  opacity: 1;
+}
+
+/* 2.5D Tilt Arena for Minigame */
+.game-viewport-3d {
+  perspective: 800px;
+}
+
+.game-canvas-3d {
+  transform: rotateX(12deg) scale(0.98);
+  transform-origin: center bottom;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 30px rgba(10, 200, 185, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.game-canvas-3d:hover {
+  transform: rotateX(8deg) scale(1);
+}
+
+/* Smooth Floating Runes */
+@keyframes float-rune {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
+.animate-float-rune {
+  animation: float-rune 4s ease-in-out infinite;
+}
+
+/* Floating Combat Text / Combo */
+@keyframes combo-popup {
+  0% {
+    transform: scale(0.5) translateY(0);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1.2) translateY(-10px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(-25px);
+    opacity: 0;
+  }
+}
+
+.animate-combo-popup {
+  animation: combo-popup 0.8s ease-out forwards;
+}

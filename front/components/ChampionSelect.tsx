@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import { ChampionSummary } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { sounds } from "@/lib/sounds";
-import { Search, Lock, CheckCircle, Sparkles } from "lucide-react";
+import { Search, Lock, CheckCircle, Swords } from "lucide-react";
 import ChampionDetailModal from "./ChampionDetailModal";
 
 interface ChampionWithLock extends ChampionSummary {
@@ -61,7 +61,7 @@ export default function ChampionSelect({
       {/* Header */}
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lol-blue/15 border border-lol-blue/30 text-lol-blue text-xs font-mono font-bold uppercase tracking-wider mb-2">
-          <Sparkles size={14} />
+          <Swords size={14} />
           <span>Fase de Selección • Regla de Oro</span>
         </div>
         <h2 className="text-3xl sm:text-5xl font-extrabold font-beaufort gold-gradient-text">

@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { sounds } from "@/lib/sounds";
-import { X, ShieldAlert, Sparkles, UserCheck } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { sounds } from "@/lib/sounds";
+import { X, ShieldAlert, User, UserCheck } from "lucide-react";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -74,7 +74,7 @@ export default function AuthModal({ isOpen, onClose, messageNotice }: AuthModalP
         {/* Header */}
         <div className="text-center mb-6">
           <div className="inline-flex p-3 rounded-full bg-lol-navy border border-lol-gold/40 text-lol-gold mb-3 shadow-inner">
-            <Sparkles size={28} />
+            <User size={28} />
           </div>
           <h2 className="text-xl font-bold font-beaufort gold-gradient-text uppercase tracking-wider">
             Portal de Invocadores

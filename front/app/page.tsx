@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import HeroCountdown from "@/components/HeroCountdown";
 import EventDetails from "@/components/EventDetails";
-import UserChampionBanner from "@/components/UserChampionBanner";
 import Minigame from "@/components/Minigame";
 import Leaderboard from "@/components/Leaderboard";
 import RsvpForm from "@/components/RsvpForm";
@@ -13,6 +12,7 @@ import LocationMap from "@/components/LocationMap";
 import StepLogin from "@/components/StepLogin";
 import StepChampionSelect from "@/components/StepChampionSelect";
 import { useAuth } from "@/context/AuthContext";
+import { sounds } from "@/lib/sounds";
 import {
   ChampionSummary,
   GuestItem,
@@ -80,7 +80,7 @@ export default function Home() {
       email: user.email,
       name: user.name,
       avatar: user.avatar,
-      rsvpStatus: user.rsvpStatus || "ATTENDING",
+      rsvpStatus: user.rsvpStatus || "PENDING",
       dietaryNotes: user.dietaryNotes || null,
       message: user.message || null,
       championId: champion.id,
@@ -101,6 +101,13 @@ export default function Home() {
     setIsChangingChampion(false);
     await fetchChampions();
     await fetchGuests();
+  };
+
+  const handleStartChangeChampion = async () => {
+    sounds.playClick();
+    await fetchChampions();
+    await fetchGuests();
+    setIsChangingChampion(true);
   };
 
   if (isLoading) {
@@ -142,13 +149,13 @@ export default function Home() {
   return (
     <main className="min-h-screen relative text-lol-gold-light selection:bg-lol-gold selection:text-black">
       {/* Hextech Navbar */}
-      <Navbar onOpenAuth={() => setIsChangingChampion(true)} />
+      <Navbar
+        onOpenAuth={handleStartChangeChampion}
+        onChangeChampion={handleStartChangeChampion}
+      />
 
       {/* Hero con cuenta regresiva en vivo al 10/10/2026 */}
       <HeroCountdown />
-
-      {/* Tu ficha de campeón actual */}
-      <UserChampionBanner onChangeChampion={() => setIsChangingChampion(true)} />
 
       {/* Detalles del Evento: Fecha, horario, lugar, banquete */}
       <EventDetails />
