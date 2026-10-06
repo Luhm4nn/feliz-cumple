@@ -19,12 +19,6 @@ export default function StepLogin({ onSuccess }: StepLoginProps) {
 
   const handleGoogleSignIn = () => {
     sounds.playClick();
-    if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
-      setError(
-        "Para iniciar con Google se necesita configurar GOOGLE_CLIENT_ID en front/.env. ¡Puedes ingresar ahora mismo completando tu nombre y correo en el formulario de abajo!"
-      );
-      return;
-    }
     try {
       signIn("google", { callbackUrl: window.location.href });
     } catch (e) {
