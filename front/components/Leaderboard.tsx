@@ -40,29 +40,33 @@ export default function Leaderboard({ refreshTrigger = 0 }: LeaderboardProps) {
   const getRankBadge = (index: number) => {
     if (index === 0) {
       return (
-        <div className="flex items-center gap-1 text-amber-400 font-bold">
-          <Crown size={18} className="animate-bounce" />
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/15 border border-amber-400/50 text-amber-300 font-bold text-xs tracking-wider font-beaufort shadow-glow-gold">
+          <Crown size={15} className="text-amber-300 shrink-0" />
           <span>CHALLENGER #1</span>
         </div>
       );
     }
     if (index === 1) {
       return (
-        <div className="flex items-center gap-1 text-slate-300 font-bold">
-          <Medal size={16} />
+        <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-400/15 border border-slate-300/40 text-slate-200 font-bold text-xs tracking-wider font-beaufort">
+          <Medal size={14} className="shrink-0" />
           <span>GRAN MAESTRO #2</span>
         </div>
       );
     }
     if (index === 2) {
       return (
-        <div className="flex items-center gap-1 text-amber-600 font-bold">
-          <Medal size={16} />
+        <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-700/20 border border-amber-600/40 text-amber-500 font-bold text-xs tracking-wider font-beaufort">
+          <Medal size={14} className="shrink-0" />
           <span>MAESTRO #3</span>
         </div>
       );
     }
-    return <span className="font-mono text-gray-400">#{index + 1}</span>;
+    return (
+      <span className="font-mono text-xs font-bold text-gray-400 px-2 py-1">
+        #{index + 1}
+      </span>
+    );
   };
 
   return (
@@ -121,7 +125,7 @@ export default function Leaderboard({ refreshTrigger = 0 }: LeaderboardProps) {
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 text-center text-xs font-bold">
+                <div className="shrink-0 flex items-center justify-center min-w-[36px] sm:min-w-[130px]">
                   {getRankBadge(idx)}
                 </div>
 
