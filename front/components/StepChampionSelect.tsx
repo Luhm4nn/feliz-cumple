@@ -51,16 +51,16 @@ export default function StepChampionSelect({
   }, [champions]);
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col justify-between">
+    <div className="min-h-screen py-5 sm:py-10 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col justify-between">
       {/* Top Bar with user info & logout */}
-      <div className="flex items-center justify-between pb-6 mb-8 border-b border-lol-gold/25">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-lol-navy border border-lol-gold flex items-center justify-center text-sm font-bold text-lol-gold">
+      <div className="flex items-center justify-between pb-4 sm:pb-6 mb-6 sm:mb-8 border-b border-lol-gold/25 gap-2">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-lol-navy border border-lol-gold flex items-center justify-center text-xs sm:text-sm font-bold text-lol-gold shrink-0">
             {user?.name.charAt(0).toUpperCase()}
           </div>
-          <div>
-            <div className="text-xs text-gray-400 font-mono">Invocador Activo</div>
-            <div className="text-sm font-bold text-white">{user?.name}</div>
+          <div className="min-w-0">
+            <div className="text-[10px] sm:text-xs text-gray-400 font-mono">Invocador Activo</div>
+            <div className="text-xs sm:text-sm font-bold text-white truncate max-w-[130px] sm:max-w-none">{user?.name}</div>
           </div>
         </div>
 
@@ -69,44 +69,45 @@ export default function StepChampionSelect({
             sounds.playClick();
             onBackToLogin();
           }}
-          className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-lol-gold transition-all px-3 py-1.5 rounded-lg border border-lol-gold/30 hover:border-lol-gold bg-lol-navy/70 shadow"
+          className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-lol-gold transition-all px-2.5 sm:px-3 py-1.5 rounded-lg border border-lol-gold/30 hover:border-lol-gold bg-lol-navy/70 shadow shrink-0 active:scale-95"
         >
           {user?.championId ? (
             <>
-              <ArrowLeft size={14} />
-              <span>Volver al Inicio</span>
+              <ArrowLeft size={13} />
+              <span>Volver</span>
             </>
           ) : (
             <>
-              <LogOut size={14} />
-              <span>Cambiar Invocador</span>
+              <LogOut size={13} />
+              <span className="hidden sm:inline">Cambiar Invocador</span>
+              <span className="sm:hidden">Salir</span>
             </>
           )}
         </button>
       </div>
 
       {/* Main Header */}
-      <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-lol-blue/15 border border-lol-blue/30 text-lol-blue text-xs font-mono font-bold uppercase tracking-wider mb-2">
+      <div className="text-center mb-6 sm:mb-10">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lol-blue/15 border border-lol-blue/30 text-lol-blue text-[10px] sm:text-xs font-mono font-bold uppercase tracking-wider mb-2">
           <span>{user?.championId ? "Fase de Selección • Cambio de Campeón" : "Paso 2 • Bloqueo de Campeón Exclusivo"}</span>
         </div>
-        <h2 className="text-3xl sm:text-5xl font-extrabold font-beaufort gold-gradient-text uppercase">
+        <h2 className="text-2xl sm:text-4xl md:text-5xl font-black font-beaufort gold-gradient-text uppercase">
           {user?.championId ? "CAMBIA TU CAMPEÓN" : "ELIGE A TU CAMPEÓN"}
         </h2>
-        <p className="text-gray-300 max-w-xl mx-auto text-xs sm:text-sm mt-2">
+        <p className="text-gray-300 max-w-xl mx-auto text-xs sm:text-sm mt-1.5 sm:mt-2 px-2">
           {user?.championId
-            ? `Tu campeón actual es ${user.championName}. Puedes cambiarlo por cualquier otro que no esté bloqueado con candado rojo.`
-            : `¡Hola ${user?.name}! Cada invitado debe reservar un campeón único para la partida del 10/10/2026. Haz clic en tu favorito para ver sus habilidades y bloquearlo.`}
+            ? `Tu campeón actual es ${user.championName}. Toca cualquier otro disponible para ver sus detalles y confirmarlo.`
+            : `¡Hola ${user?.name}! Toca a tu campeón favorito para ver sus habilidades oficiales y bloquearlo.`}
         </p>
 
         {/* Counter Pill */}
-        <div className="mt-4 flex items-center justify-center gap-3 text-xs font-mono text-gray-400">
+        <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[11px] sm:text-xs font-mono text-gray-400">
           <span className="text-lol-gold-light">
-            Total en la Grieta: <strong className="text-lol-gold">{champions.length}</strong>
+            Total: <strong className="text-lol-gold">{champions.length}</strong>
           </span>
           <span>•</span>
           <span className="text-lol-blue">
-            Ya Bloqueados: <strong>{totalLocked}</strong>
+            Bloqueados: <strong>{totalLocked}</strong>
           </span>
           <span>•</span>
           <span className="text-green-400">
@@ -116,24 +117,24 @@ export default function StepChampionSelect({
       </div>
 
       {/* Search & Filters */}
-      <div className="mb-8 space-y-4 max-w-4xl mx-auto w-full">
+      <div className="mb-6 sm:mb-8 space-y-3.5 sm:space-y-4 max-w-4xl mx-auto w-full">
         {/* Search */}
         <div className="relative">
           <Search
             size={18}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-lol-gold"
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-lol-gold"
           />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar por nombre o título (ej. Jinx, Yasuo, Ahri, Lee Sin)..."
-            className="w-full pl-11 pr-4 py-3 bg-lol-navy/90 border border-lol-gold/40 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-lol-blue focus:shadow-glow-blue transition-all"
+            placeholder="Buscar campeón (ej. Jinx, Yasuo, Ahri)..."
+            className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-lol-navy/90 border border-lol-gold/40 rounded-lg text-base sm:text-sm text-white placeholder-gray-400 focus:outline-none focus:border-lol-blue focus:shadow-glow-blue transition-all"
           />
         </div>
 
         {/* Roles */}
-        <div className="flex flex-wrap items-center justify-center gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
           {ROLES.map((role) => {
             const isActive = selectedRole === role.key;
             return (
@@ -143,7 +144,7 @@ export default function StepChampionSelect({
                   sounds.playClick();
                   setSelectedRole(role.key);
                 }}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                className={`px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all border active:scale-95 ${
                   isActive
                     ? "bg-lol-gold text-lol-navy-black border-lol-gold shadow-glow-gold"
                     : "bg-lol-navy text-gray-300 border-lol-gold/25 hover:border-lol-gold/60 hover:text-white"
@@ -157,7 +158,7 @@ export default function StepChampionSelect({
       </div>
 
       {/* Champions Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 mb-12">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-4 mb-12">
         {filteredChampions.map((champ) => {
           const isLockedByOther =
             champ.isLocked && champ.lockedBy && champ.lockedBy !== user?.name;
@@ -169,7 +170,7 @@ export default function StepChampionSelect({
                 sounds.playHover();
                 setSelectedChamp(champ);
               }}
-              className={`hextech-card group cursor-pointer rounded-lg overflow-hidden border transition-all duration-200 transform hover:-translate-y-1 flex flex-col ${
+              className={`hextech-card group cursor-pointer rounded-lg overflow-hidden border transition-all duration-200 transform hover:-translate-y-1 active:scale-95 flex flex-col ${
                 isLockedByOther
                   ? "border-lol-red/50 opacity-70 hover:opacity-100"
                   : "border-lol-gold/30 hover:border-lol-gold hover:shadow-glow-gold"
